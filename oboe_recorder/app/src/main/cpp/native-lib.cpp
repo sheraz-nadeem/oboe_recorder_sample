@@ -1,5 +1,6 @@
 #include <jni.h>
 #include <string>
+#include <oboe/oboe.h>
 
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_sheraz_oboerecorder_MainActivity_stringFromJNI(

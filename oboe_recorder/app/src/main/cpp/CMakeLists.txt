@@ -36,4 +36,9 @@ find_library( # Sets the name of the path variable.
 # can link multiple libraries, such as libraries you define in this
 # build script, prebuilt third-party libraries, or system libraries.
 
-target_link_libraries( native-lib ${log-lib} )
+### ADD OBOE LIBRARY
+set(OBOE_DIR ../../../../oboe)
+add_subdirectory(${OBOE_DIR} ./oboe)
+include_directories(${OBOE_DIR}/include)
+
+target_link_libraries( native-lib ${log-lib} oboe )
