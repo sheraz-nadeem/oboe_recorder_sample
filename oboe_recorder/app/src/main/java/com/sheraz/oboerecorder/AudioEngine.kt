@@ -14,5 +14,8 @@ class AudioEngine {
 
         @JvmStatic external fun startRecording()
         @JvmStatic external fun stopRecording()
+
+        @JvmStatic external fun startPlaying()
+        @JvmStatic external fun stopPlaying()
     }
 }
