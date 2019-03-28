@@ -18,10 +18,6 @@ int32_t SoundRecording::write(const float *sourceData, int32_t numSamples) {
 
         mIteration++;
         int32_t newSize = kMaxSamples*mIteration;
-        mTotalSamples = newSize;
-
-        LOGW(TAG, std::to_string(mIteration).c_str());
-        LOGW(TAG, std::to_string(mTotalSamples).c_str());
 
         auto * newData = new float[newSize] { 0 };
         std::copy(mData, mData + mWriteIndex, newData);
@@ -36,8 +32,8 @@ int32_t SoundRecording::write(const float *sourceData, int32_t numSamples) {
         mData[mWriteIndex++] = sourceData[i];
     }
 
-    LOGD(TAG, "write(): mWriteIndex is ");
-    LOGD(TAG, std::to_string(mWriteIndex).c_str());
+    mTotalSamples += numSamples;
+
     return numSamples;
 }
 
@@ -52,15 +48,3 @@ int32_t SoundRecording::read(float *targetData, int32_t numSamples) {
     }
     return framesRead;
 }
-
-//int32_t SoundRecording::read(float *targetData, int32_t numSamples) {
-//
-//    LOGD(TAG, "read(): ");
-//
-//    int32_t framesRead = 0;
-//    while (framesRead < numSamples && mReadIndex < mWriteIndex) {
-//        targetData[framesRead++] = mData[mReadIndex++];
-//        if (mIsLooping && mReadIndex == mWriteIndex) mReadIndex = 0;
-//    }
-//    return framesRead;
-//}

@@ -62,6 +62,7 @@ void AudioEngine::stopPlaying() {
 
     stopStream(mPlaybackStream);
     closeStream(mPlaybackStream);
+    mSoundRecording.setReadPositionToStart();
 
 }
 
@@ -77,11 +78,15 @@ void AudioEngine::openRecordingStream() {
     if (result == oboe::Result::OK && mRecordingStream) {
         assert(mRecordingStream->getChannelCount() == mInputChannelCount);
 //        assert(mRecordingStream->getSampleRate() == mSampleRate);
-        assert(mRecordingStream->getFormat() == mFormat);
+//        assert(mRecordingStream->getFormat() == mFormat);
 
         mSampleRate = mRecordingStream->getSampleRate();
-        LOGD(TAG, "openRecordingStream(): mSampleRate = ");
-        LOGD(TAG, std::to_string(mSampleRate).c_str());
+        mFormat = mRecordingStream->getFormat();
+        LOGV(TAG, "openRecordingStream(): mSampleRate = ");
+        LOGV(TAG, std::to_string(mSampleRate).c_str());
+
+        LOGV(TAG, "openRecordingStream(): mFormat = ");
+        LOGV(TAG, oboe::convertToText(mFormat));
 
     } else {
         LOGE(TAG, "Failed to create recording stream. Error: %s",
@@ -105,8 +110,8 @@ void AudioEngine::openPlaybackStream() {
         assert(mPlaybackStream->getFormat() == mFormat);
 
         mSampleRate = mPlaybackStream->getSampleRate();
-        LOGD(TAG, "openPlaybackStream(): mSampleRate = ");
-        LOGD(TAG, std::to_string(mSampleRate).c_str());
+        LOGV(TAG, "openPlaybackStream(): mSampleRate = ");
+        LOGV(TAG, std::to_string(mSampleRate).c_str());
 
     } else {
         LOGE(TAG, "openPlaybackStream(): Failed to create recording stream. Error: %s",
