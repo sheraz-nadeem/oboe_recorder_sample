@@ -63,31 +63,80 @@ Java_com_sheraz_oboerecorder_AudioEngine_stopRecording(JNIEnv *env, jclass) {
 }
 
 JNIEXPORT void JNICALL
-Java_com_sheraz_oboerecorder_AudioEngine_startPlaying(JNIEnv *env, jclass) {
+Java_com_sheraz_oboerecorder_AudioEngine_startPlayingRecordedStream(JNIEnv *env, jclass) {
 
-    LOGD(TAG, "startPlaying(): ");
+    LOGD(TAG, "startPlayingRecordedStream(): ");
 
     if (audioEngine == nullptr) {
         LOGE(TAG, "audioEngine is null, you must call create() method before calling this method");
         return;
     }
 
-    audioEngine->startPlaying();
+    audioEngine->startPlayingRecordedStream();
 
 }
 
 JNIEXPORT void JNICALL
-Java_com_sheraz_oboerecorder_AudioEngine_stopPlaying(JNIEnv *env, jclass) {
+Java_com_sheraz_oboerecorder_AudioEngine_stopPlayingRecordedStream(JNIEnv *env, jclass) {
 
-    LOGD(TAG, "stopPlaying(): ");
+    LOGD(TAG, "stopPlayingRecordedStream(): ");
 
     if (audioEngine == nullptr) {
         LOGE(TAG, "audioEngine is null, you must call create() method before calling this method");
         return;
     }
 
-    audioEngine->stopPlaying();
+    audioEngine->stopPlayingRecordedStream();
 
+}
+
+JNIEXPORT void JNICALL
+Java_com_sheraz_oboerecorder_AudioEngine_writeFile(JNIEnv *env, jclass, jstring filePath) {
+
+    LOGD(TAG, "writeFile(): filePath = ");
+//    LOGD(TAG, filePath);
+
+    if (audioEngine == nullptr) {
+        LOGE(TAG, "audioEngine is null, you must call create() method before calling this method");
+        return;
+    }
+
+    const char *path;
+
+    path = env->GetStringUTFChars(filePath, nullptr);
+    audioEngine->writeToFile(path);
+    env->ReleaseStringUTFChars(filePath, path);
+}
+
+JNIEXPORT void JNICALL
+Java_com_sheraz_oboerecorder_AudioEngine_startPlayingFromFile(JNIEnv *env, jclass, jstring filePath) {
+
+    LOGD(TAG, "startPlayingFromFile(): filePath = ");
+//    LOGD(TAG, filePath);
+
+    if (audioEngine == nullptr) {
+        LOGE(TAG, "audioEngine is null, you must call create() method before calling this method");
+        return;
+    }
+
+    const char *path;
+
+    path = env->GetStringUTFChars(filePath, nullptr);
+    audioEngine->startPlayingFromFile(path);
+    env->ReleaseStringUTFChars(filePath, path);
+}
+
+JNIEXPORT void JNICALL
+Java_com_sheraz_oboerecorder_AudioEngine_stopPlayingFromFile(JNIEnv *env, jclass) {
+
+    LOGD(TAG, "stopPlayingFromFile(): ");
+
+    if (audioEngine == nullptr) {
+        LOGE(TAG, "audioEngine is null, you must call create() method before calling this method");
+        return;
+    }
+
+    audioEngine->stopPlayingFromFile();
 }
 };
 

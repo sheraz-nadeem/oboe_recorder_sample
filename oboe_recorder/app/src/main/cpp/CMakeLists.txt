@@ -17,9 +17,10 @@ add_library( # Sets the name of the library.
         SHARED
 
         # Provides a relative path to your source file(s).
-        Utils.cpp
         SoundRecording.cpp
         AudioEngine.cpp
+        RecordingCallback.cpp
+        PlayingCallback.cpp
         jni_bridge.cpp)
 
 # Searches for a specified prebuilt library and stores the path as a
@@ -44,4 +45,9 @@ set(OBOE_DIR ../../../../oboe)
 add_subdirectory(${OBOE_DIR} ./oboe)
 include_directories(${OBOE_DIR}/include)
 
-target_link_libraries( audioEngine ${log-lib} oboe )
+### ADD LIBSNDFILE LIBRARY
+set(LIB_SND_FILE_DIR ../../../../libsndfile)
+add_subdirectory(${LIB_SND_FILE_DIR} ./sndfile)
+include_directories(${LIB_SND_FILE_DIR}/src)
+
+target_link_libraries( audioEngine ${log-lib} oboe sndfile)

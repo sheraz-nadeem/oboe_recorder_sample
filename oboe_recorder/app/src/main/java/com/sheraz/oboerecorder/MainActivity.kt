@@ -2,16 +2,25 @@ package com.sheraz.oboerecorder
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import kotlinx.android.synthetic.main.activity_main.*
+
+
 
 class MainActivity : AppCompatActivity() {
 
     private val AUDIO_RECORD_REQUEST = 12446
+    private val PERMISSIONS = arrayOf(
+        Manifest.permission.RECORD_AUDIO,
+        Manifest.permission.READ_EXTERNAL_STORAGE,
+        Manifest.permission.WRITE_EXTERNAL_STORAGE
+    )
+
+    private var mFilePath = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -20,10 +29,16 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        checkRecordAudioPermission()
         AudioEngine.create()
         initUI()
+        checkRecordAudioPermission()
 
+    }
+
+    override fun onResume() {
+
+        Log.d(TAG, "onResume: ")
+        super.onResume()
     }
 
     override fun onDestroy() {
@@ -58,27 +73,79 @@ class MainActivity : AppCompatActivity() {
             AudioEngine.stopRecording()
         }
 
-        btnStartPlaying.setOnClickListener {
+        btnStartPlayingFromRecording.setOnClickListener {
 
             if (!checkRecordAudioPermission()) {
                 return@setOnClickListener
             }
 
             Log.d(TAG, "btnStartPlaying.onClick: ")
-            AudioEngine.startPlaying()
+            AudioEngine.startPlayingRecordedStream()
         }
 
-        btnStopPlaying.setOnClickListener {
+        btnStopPlayingFromRecording.setOnClickListener {
 
             if (!checkRecordAudioPermission()) {
                 return@setOnClickListener
             }
 
             Log.d(TAG, "btnStopPlaying.onClick: ")
-            AudioEngine.stopPlaying()
+            AudioEngine.stopPlayingRecordedStream()
+        }
+
+        btnWriteToFile.setOnClickListener {
+
+            if (!checkRecordAudioPermission()) {
+                return@setOnClickListener
+            }
+
+            Log.d(TAG, "btnWriteToFile.onClick: ")
+            mFilePath = Utils.getAudioRecordingFilePath(this)
+            AudioEngine.writeFile(mFilePath)
+        }
+
+        btnStartPlayFromFile.setOnClickListener {
+
+            if (!checkRecordAudioPermission()) {
+                return@setOnClickListener
+            }
+
+            if (mFilePath.isEmpty()) return@setOnClickListener
+
+            Log.d(TAG, "btnStartPlayFromFile.onClick: ")
+            AudioEngine.startPlayingFromFile(mFilePath)
+        }
+
+        btnStopPlayFromFile.setOnClickListener {
+
+            if (!checkRecordAudioPermission()) {
+                return@setOnClickListener
+            }
+
+            if (mFilePath.isEmpty()) return@setOnClickListener
+
+            Log.d(TAG, "btnStopPlayFromFile.onClick: ")
+            AudioEngine.stopPlayingFromFile()
+        }
+
+        btnReset.setOnClickListener {
+
+            if (!checkRecordAudioPermission()) {
+                return@setOnClickListener
+            }
+
+            Log.v(TAG, "btnReset.onClick: Deleting AudioEngine instance")
+            AudioEngine.delete()
+            Log.v(TAG, "btnReset.onClick: Creating new AudioEngine instance")
+            if (AudioEngine.create()) {
+                Log.i(TAG, "btnReset.OnClick: New AudioEngine instance has been created")
+            } else {
+                Log.e(TAG, "btnReset.OnClick: Something went wrong, please check logcat for errors")
+            }
         }
 
     }
+
     private fun checkRecordAudioPermission(): Boolean {
 
         Log.d(TAG, "checkRecordAudioPermission: ")
@@ -102,9 +169,21 @@ class MainActivity : AppCompatActivity() {
 
     private fun isRecordPermissionGranted(): Boolean {
 
-        val permissionStatus = ActivityCompat
-            .checkSelfPermission(this,
-                Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+        val permissionStatus = (ActivityCompat
+            .checkSelfPermission(
+                this,
+                Manifest.permission.RECORD_AUDIO
+            ) == PackageManager.PERMISSION_GRANTED) &&
+                (ActivityCompat
+                    .checkSelfPermission(
+                        this,
+                        Manifest.permission.READ_EXTERNAL_STORAGE
+                    ) == PackageManager.PERMISSION_GRANTED) &&
+                (ActivityCompat
+                    .checkSelfPermission(
+                        this,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                    ) == PackageManager.PERMISSION_GRANTED)
 
         Log.d(TAG, "isRecordPermissionGranted: $permissionStatus")
 
@@ -114,11 +193,7 @@ class MainActivity : AppCompatActivity() {
     private fun requestRecordPermission() {
 
         Log.d(TAG, "requestRecordPermission: ")
-        ActivityCompat.requestPermissions(
-            this,
-            arrayOf(Manifest.permission.RECORD_AUDIO),
-            AUDIO_RECORD_REQUEST
-        )
+        ActivityCompat.requestPermissions(this, PERMISSIONS, AUDIO_RECORD_REQUEST)
 
     }
 
@@ -127,23 +202,37 @@ class MainActivity : AppCompatActivity() {
         grantResults: IntArray
     ) {
 
+        Log.d(TAG, "onRequestPermissionsResult: requestCode = $requestCode, ")
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
         if (AUDIO_RECORD_REQUEST != requestCode) {
-            super.onRequestPermissionsResult(requestCode, permissions, grantResults)
             return
         }
 
-        if (grantResults.size != 1 || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+        // handle the case when user clicks on "Don't ask again"
+        // inside permission dialog
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 
-            Log.w(TAG, "requestRecordPermission: RECORD_AUDIO Permission not granted, show toast")
+            if (!shouldShowRequestPermissionRationale(PERMISSIONS[0]) ||
+                !shouldShowRequestPermissionRationale(PERMISSIONS[1]) ||
+                !shouldShowRequestPermissionRationale(PERMISSIONS[2])) {
 
-            Toast.makeText(
-                applicationContext,
-                getString(R.string.need_record_audio_permission),
-                Toast.LENGTH_SHORT).show()
+                Log.w(TAG, "onRequestPermissionsResult: Some Permission(s) not granted, show error dialog.")
+                Utils.showPermissionsErrorDialog(this)
+                return
+
+            }
+
+        }
+
+        if (!isRecordPermissionGranted()) {
+
+            Log.w(TAG, "onRequestPermissionsResult: Some Permission(s) not granted, disable controls")
+            disableControls()
 
         } else {
 
-            Log.i(TAG, "requestRecordPermission: RECORD_AUDIO Permission granted, continue with enableControls")
+            Log.i(TAG, "onRequestPermissionsResult: ALL Permissions granted, continue with enableControls")
             enableControls()
 
         }
@@ -154,10 +243,14 @@ class MainActivity : AppCompatActivity() {
         Log.d(TAG, "enableControls: ")
 
         tvStatus.text = ""
-        btnStartPlaying.isEnabled = true
+        btnStartPlayingFromRecording.isEnabled = true
         btnStartRecording.isEnabled = true
-        btnStopPlaying.isEnabled = true
+        btnStopPlayingFromRecording.isEnabled = true
         btnStopRecording.isEnabled = true
+        btnWriteToFile.isEnabled = true
+        btnStartPlayFromFile.isEnabled = true
+        btnStopPlayFromFile.isEnabled = true
+        btnReset.isEnabled = true
 
     }
 
@@ -166,12 +259,17 @@ class MainActivity : AppCompatActivity() {
         Log.d(TAG, "disableControls: ")
 
         tvStatus.text = getString(R.string.need_record_audio_permission)
-        btnStartPlaying.isEnabled = false
+        btnStartPlayingFromRecording.isEnabled = false
         btnStartRecording.isEnabled = false
-        btnStopPlaying.isEnabled = false
+        btnStopPlayingFromRecording.isEnabled = false
         btnStopRecording.isEnabled = false
+        btnWriteToFile.isEnabled = false
+        btnStartPlayFromFile.isEnabled = false
+        btnStopPlayFromFile.isEnabled = false
+        btnReset.isEnabled = false
 
     }
+
 
     companion object {
         private val TAG = MainActivity::class.java.simpleName
