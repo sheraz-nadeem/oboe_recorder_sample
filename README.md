@@ -20,3 +20,26 @@ TODOs
 each time user starts recording.
 4. Give user the control to save recordings to a new directory location.
 
+## Build
+
+This project has submodules, please before clone these:
+
+```bash
+git clone --recursive https://github.com/sheraz-nadeem/oboe_recorder_sample.git
+```
+
+Import to Android Studio or build it from command line likes this:
+
+```
+cd oboe_recorder_sample/oboe_recorder
+./gradlew assembleDebug
+``` 
+
+### Troubleshooting
+
+Some times and when you have a previous version, you need clean the old build caches:
+
+```bash
+rm -rf app/.cxx/
+```
+

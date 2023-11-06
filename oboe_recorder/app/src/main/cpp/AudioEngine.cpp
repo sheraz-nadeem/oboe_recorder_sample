@@ -1,5 +1,6 @@
 
 #include <oboe/Oboe.h>
+#include <assert.h>
 #include "AudioEngine.h"
 #include "logging_macros.h"
 
