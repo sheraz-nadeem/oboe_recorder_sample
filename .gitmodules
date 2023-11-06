@@ -1,0 +1,6 @@
+[submodule "oboe_recorder/libsndfile"]
+	path = oboe_recorder/libsndfile
+	url = https://github.com/libsndfile/libsndfile.git
+[submodule "oboe_recorder/oboe"]
+	path = oboe_recorder/oboe
+	url = https://github.com/google/oboe
